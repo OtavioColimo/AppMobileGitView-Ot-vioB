@@ -373,7 +373,7 @@ export default class Main extends Component {
                         {
                           backgroundColor:
                             selectedType === type
-                              ? this.getTypeColor(type)
+                              ? getTypeColor(type)
                               : "#f0f0f0",
                         },
                         selectedType === type && styles.typeFilterBtnActive,
@@ -489,7 +489,6 @@ export default class Main extends Component {
                   {
                     searchText: "",
                     selectedType: null,
-                    selectedEvolution: null,
                     minHeight: 0,
                     maxHeight: 100,
                     minWeight: 0,
@@ -526,3 +525,44 @@ export default class Main extends Component {
     );
   }
 }
+
+// Estilos para compatibilidade - apenas para elementos que não são styled-components
+const styles = {
+  headerContainer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 },
+  title: { fontSize: 24, fontWeight: "bold", color: "#ff0000" },
+  logoutBtn: { backgroundColor: "#ff0000", paddingHorizontal: 15, paddingVertical: 8, borderRadius: 5 },
+  logoutBtnText: { color: "#fff", fontWeight: "bold", fontSize: 12 },
+  searchContainer: { flexDirection: "row", gap: 8, marginBottom: 12, alignItems: "center" },
+  searchInput: { flex: 1, backgroundColor: "#f5f5f5", borderRadius: 8, paddingHorizontal: 15, paddingVertical: 10, borderWidth: 1, borderColor: "#ddd", fontSize: 14, color: "#333" },
+  filterToggleBtn: { backgroundColor: "#ff0000", width: 44, height: 44, borderRadius: 8, justifyContent: "center", alignItems: "center" },
+  filterToggleBtnText: { fontSize: 20, color: "#fff" },
+  resultCount: { fontSize: 12, color: "#999", marginBottom: 10, marginLeft: 2 },
+  filterPanel: { backgroundColor: "#f9f9f9", borderRadius: 8, marginBottom: 12, borderWidth: 1, borderColor: "#ddd", maxHeight: 280 },
+  filterTabs: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#ddd" },
+  filterTab: { flex: 1, paddingVertical: 10, alignItems: "center", borderBottomWidth: 2, borderBottomColor: "transparent" },
+  filterTabActive: { borderBottomColor: "#ff0000" },
+  filterTabText: { fontSize: 12, fontWeight: "600", color: "#999" },
+  filterTabTextActive: { color: "#ff0000" },
+  filterContent: { paddingHorizontal: 12, paddingVertical: 10, maxHeight: 220 },
+  filterOptionsContainer: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  typeFilterBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: "#f0f0f0", borderWidth: 1, borderColor: "#ddd" },
+  typeFilterBtnActive: { borderColor: "#ff0000", borderWidth: 2 },
+  typeFilterBtnText: { fontSize: 12, fontWeight: "600", color: "#666", textTransform: "capitalize" },
+  typeFilterBtnTextActive: { color: "#fff" },
+  statFilterContainer: { width: "100%" },
+  statFilterLabel: { fontSize: 13, fontWeight: "600", color: "#333", marginBottom: 10 },
+  sliderContainer: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 15, gap: 15 },
+  sliderBtn: { width: 40, height: 40, backgroundColor: "#ff0000", color: "#fff", textAlign: "center", textAlignVertical: "center", borderRadius: 8, fontSize: 20, fontWeight: "bold" },
+  sliderValue: { fontSize: 14, fontWeight: "bold", color: "#333", minWidth: 50, textAlign: "center" },
+  resetBtn: { backgroundColor: "#f0f0f0", paddingVertical: 10, borderRadius: 8, alignItems: "center", borderWidth: 1, borderColor: "#ddd" },
+  resetBtnText: { fontSize: 13, fontWeight: "600", color: "#ff0000" },
+  cardContent: { flex: 1, marginLeft: 15, justifyContent: "space-between", paddingVertical: 10, paddingRight: 10 },
+  typesContainer: { flexDirection: "row", gap: 8, marginVertical: 5 },
+  typeTag: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, color: "#fff", fontSize: 11, fontWeight: "600", overflow: "hidden" },
+  cardStats: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
+  stat: { fontSize: 12, color: "#666", fontWeight: "600" },
+  emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  emptyText: { fontSize: 16, color: "#999", marginBottom: 20 },
+  retryBtn: { backgroundColor: "#ff0000", paddingHorizontal: 25, paddingVertical: 12, borderRadius: 8 },
+  retryBtnText: { color: "#fff", fontWeight: "bold", fontSize: 14 },
+};

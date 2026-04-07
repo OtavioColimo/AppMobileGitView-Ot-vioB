@@ -32,9 +32,6 @@ import {
   StatFill,
   StatValue,
   MovesText,
-  TypeEffectivenessContainer,
-  TypeEffectivenessBadge,
-  TypeEffectivenessText,
   EvolutionContainer,
   NoEvolutionText,
   SuggestionsContainer,
@@ -43,7 +40,6 @@ import {
   SuggestionContent,
   SuggestionTypes,
   SuggestionTypeTag,
-  LoadingIndicator,
 } from "../styles/PokemonDetailStyles";
 import { getTypeColor, FILTER_LIMITS } from "../constants/pokemon";
 
@@ -53,7 +49,6 @@ export default class PokemonDetail extends Component {
     evolutionChain: [],
     loading: true,
     moves: [],
-    typeEffectiveness: {},
     suggestions: [],
   };
 
@@ -64,7 +59,6 @@ export default class PokemonDetail extends Component {
     this.setState({ pokemon });
     this.fetchEvolutionChain(pokemon.id);
     this.fetchMoves(pokemon);
-    this.fetchTypeEffectiveness(pokemon.types);
     this.fetchRandomSuggestions();
   }
 
@@ -95,30 +89,6 @@ export default class PokemonDetail extends Component {
       this.setState({ moves });
     } catch (error) {
       // Falha silenciosa se não conseguir buscar movimentos
-    }
-  };
-
-  /**
-   * Busca efetividade de tipos contra cada tipo do Pokémon.
-   * Determina quais tipos o Pokémon é forte e fraco contra.
-   */
-  fetchTypeEffectiveness = async (types) => {
-    try {
-      const typeEffectiveness = {};
-
-      for (const type of types) {
-        const response = await api.get(`/type/${type}`);
-        const data = response.data;
-
-        typeEffectiveness[type] = {
-          strongAgainst: data.damage_relations.damage_to.map((t) => t.name),
-          weakAgainst: data.damage_relations.damage_from.map((t) => t.name),
-        };
-      }
-
-      this.setState({ typeEffectiveness });
-    } catch (error) {
-      // Falha silenciosa se não conseguir buscar efetividade
     }
   };
 
@@ -252,7 +222,6 @@ export default class PokemonDetail extends Component {
       this.setState({ pokemon, loading: false });
       this.fetchEvolutionChain(pokemon.id);
       this.fetchMoves(pokemon);
-      this.fetchTypeEffectiveness(pokemon.types);
       this.fetchRandomSuggestions();
     } catch (error) {
       Alert.alert("Erro", "Não foi possível carregar o Pokémon: " + error.message);
@@ -261,20 +230,7 @@ export default class PokemonDetail extends Component {
   };
 
   render() {
-    const { pokemon, evolutionChain, loading, moves, typeEffectiveness } = this.state;
-
-    // Combina efetividades de todos os tipos em listas únicas
-    let strongAgainstTypes = [];
-    let weakAgainstTypes = [];
-
-    Object.values(typeEffectiveness).forEach((typeData) => {
-      strongAgainstTypes = [
-        ...new Set([...strongAgainstTypes, ...typeData.strongAgainst]),
-      ];
-      weakAgainstTypes = [
-        ...new Set([...weakAgainstTypes, ...typeData.weakAgainst]),
-      ];
-    });
+    const { pokemon, evolutionChain, loading, moves } = this.state;
 
     return (
       <Container>
@@ -354,50 +310,6 @@ export default class PokemonDetail extends Component {
             </>
           )}
 
-          {strongAgainstTypes.length > 0 && (
-            <>
-              <SectionTitle>Forte Contra ✅</SectionTitle>
-              <TypeEffectivenessContainer>
-                {strongAgainstTypes.slice(0, 8).map((type) => (
-                  <TypeEffectivenessBadge
-                    key={type}
-                    badgeColor={getTypeColor(type)}
-                  >
-                    <TypeEffectivenessText>
-                      {type}
-                    </TypeEffectivenessText>
-                  </TypeEffectivenessBadge>
-                ))}
-              </TypeEffectivenessContainer>
-            </>
-          )}
-
-          {weakAgainstTypes.length > 0 && (
-            <>
-              <SectionTitle>Fraco Contra ❌</SectionTitle>
-              <TypeEffectivenessContainer>
-                {weakAgainstTypes.slice(0, 8).map((type) => (
-                  <View
-                    key={type}
-                    style={[
-                      styles.typeEffectivenessBadge,
-                      {
-                        backgroundColor: getTypeColor(type),
-                        opacity: 0.6,
-                        borderWidth: 2,
-                        borderColor: getTypeColor(type),
-                      },
-                    ]}
-                  >
-                    <TypeEffectivenessText>
-                      {type}
-                    </TypeEffectivenessText>
-                  </View>
-                ))}
-              </TypeEffectivenessContainer>
-            </>
-          )}
-
           {loading ? (
             <ActivityIndicator
               size="large"
@@ -443,14 +355,8 @@ export default class PokemonDetail extends Component {
   }
 }
 
-// Estilos para fraco contra (usa View diretamente, não styled-component)
+// Estilos para compatibilidade - apenas para elementos que não são styled-components
 const styles = {
-  typeEffectivenessBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    backgroundColor: "#999",
-  },
   suggestionCard: {
     flexDirection: "row",
     alignItems: "center",
