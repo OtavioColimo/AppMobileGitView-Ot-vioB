@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
   ScrollView,
@@ -18,6 +17,35 @@ import {
   RelatedImage,
   RelatedName,
 } from "../styles";
+import {
+  Container,
+  TypesContainer,
+  TypeTag,
+  InfoContainer,
+  InfoItem,
+  InfoLabel,
+  InfoValue,
+  StatsContainer,
+  StatRow,
+  StatName,
+  StatBar,
+  StatFill,
+  StatValue,
+  MovesText,
+  TypeEffectivenessContainer,
+  TypeEffectivenessBadge,
+  TypeEffectivenessText,
+  EvolutionContainer,
+  NoEvolutionText,
+  SuggestionsContainer,
+  SuggestionCard,
+  SuggestionImageContainer,
+  SuggestionContent,
+  SuggestionTypes,
+  SuggestionTypeTag,
+  LoadingIndicator,
+} from "../styles/PokemonDetailStyles";
+import { getTypeColor, FILTER_LIMITS } from "../constants/pokemon";
 
 export default class PokemonDetail extends Component {
   state = {
@@ -42,15 +70,10 @@ export default class PokemonDetail extends Component {
 
   fetchEvolutionChain = async (pokemonId) => {
     try {
-      // Buscar espécie do Pokémon para obter cadeia evolutiva
       const speciesResponse = await api.get(`/pokemon-species/${pokemonId}`);
       const evolutionChainUrl = speciesResponse.data.evolution_chain.url;
-
-      // Buscar cadeia evolutiva
       const chainResponse = await api.get(evolutionChainUrl);
       const chain = chainResponse.data.chain;
-
-      // Extrair Pokémon da cadeia evolutiva
       const evolutions = this.extractEvolutions(chain);
 
       this.setState({
@@ -58,7 +81,6 @@ export default class PokemonDetail extends Component {
         loading: false,
       });
     } catch (error) {
-
       this.setState({ loading: false });
     }
   };
@@ -67,15 +89,19 @@ export default class PokemonDetail extends Component {
     try {
       const response = await api.get(`/pokemon/${pokemon.name}`);
       const moves = response.data.moves
-        .slice(0, 15)
+        .slice(0, FILTER_LIMITS.MAX_MOVES_DISPLAY)
         .map((move) => move.move.name)
         .join(", ");
       this.setState({ moves });
     } catch (error) {
-
+      // Falha silenciosa se não conseguir buscar movimentos
     }
   };
 
+  /**
+   * Busca efetividade de tipos contra cada tipo do Pokémon.
+   * Determina quais tipos o Pokémon é forte e fraco contra.
+   */
   fetchTypeEffectiveness = async (types) => {
     try {
       const typeEffectiveness = {};
@@ -92,36 +118,39 @@ export default class PokemonDetail extends Component {
 
       this.setState({ typeEffectiveness });
     } catch (error) {
-
+      // Falha silenciosa se não conseguir buscar efetividade
     }
   };
 
   fetchRandomSuggestions = async () => {
     try {
       const suggestions = [];
-      
-      // Gerar 4 números aleatórios entre 1 e 150
-      for (let i = 0; i < 4; i++) {
+
+      for (let i = 0; i < FILTER_LIMITS.MAX_SUGGESTIONS; i++) {
         const randomId = Math.floor(Math.random() * 151) + 1;
         const response = await api.get(`/pokemon/${randomId}`);
         const data = response.data;
-        
+
         suggestions.push({
           id: data.id,
           name: data.name,
-          image: 
+          image:
             data.sprites?.other?.["official-artwork"]?.front_default ||
             data.sprites?.front_default,
           types: data.types?.map((t) => t.type.name) || [],
         });
       }
-      
+
       this.setState({ suggestions });
     } catch (error) {
-
+      // Falha silenciosa se não conseguir carregar sugestões
     }
   };
 
+  /**
+   * Recursivamente extrai Pokémon da cadeia evolutiva.
+   * A API retorna uma estrutura aninhada; este método achata para um array.
+   */
   extractEvolutions = (chain, evolutions = []) => {
     if (chain.species) {
       evolutions.push({
@@ -156,63 +185,41 @@ export default class PokemonDetail extends Component {
     </TouchableOpacity>
   );
 
+  /**
+   * Renderiza card de sugestão com imagem, nome, ID e tipos.
+   * Utilizado para mostrar Pokémon aleatórios relacionados.
+   */
   renderSuggestion = ({ item: suggestion }) => {
-    const getTypeColor = (type) => {
-      const colors = {
-        normal: "#A8A878",
-        fighting: "#C03028",
-        flying: "#A890F0",
-        poison: "#A040A0",
-        ground: "#E0C068",
-        rock: "#B8A038",
-        bug: "#A8B820",
-        ghost: "#705898",
-        steel: "#B8B8D0",
-        fire: "#F08030",
-        water: "#6890F0",
-        grass: "#78C850",
-        electric: "#F8D030",
-        psychic: "#F85888",
-        ice: "#98D8D8",
-        dragon: "#7038F8",
-        dark: "#705848",
-        fairy: "#EE99AC",
-      };
-      return colors[type] || "#999";
-    };
-
     return (
       <TouchableOpacity
-        onPress={() =>
-          this.fetchPokemonByName(suggestion.name)
-        }
-        style={styles.suggestionCard}
+        onPress={() => this.fetchPokemonByName(suggestion.name)}
       >
-        <View style={styles.suggestionImageContainer}>
-          <RelatedImage
-            source={{
-              uri: suggestion.image || "https://via.placeholder.com/100",
-            }}
-          />
-        </View>
-        <View style={styles.suggestionContent}>
-          <RelatedName numberOfLines={1}>
-            #{suggestion.id} {suggestion.name}
-          </RelatedName>
-          <View style={styles.suggestionTypes}>
-            {suggestion.types.slice(0, 2).map((type) => (
-              <Text
-                key={type}
-                style={[
-                  styles.suggestionTypeTag,
-                  { backgroundColor: getTypeColor(type) },
-                ]}
-              >
-                {type}
-              </Text>
-            ))}
-          </View>
-        </View>
+        <SuggestionCard>
+          <SuggestionImageContainer>
+            <RelatedImage
+              source={{
+                uri: suggestion.image || "https://via.placeholder.com/100",
+              }}
+            />
+          </SuggestionImageContainer>
+          <SuggestionContent>
+            <RelatedName numberOfLines={1}>
+              #{suggestion.id} {suggestion.name}
+            </RelatedName>
+            <SuggestionTypes>
+              {suggestion.types.slice(0, 2).map((type) => (
+                <SuggestionTypeTag
+                  key={type}
+                  style={{
+                    backgroundColor: getTypeColor(type),
+                  }}
+                >
+                  {type}
+                </SuggestionTypeTag>
+              ))}
+            </SuggestionTypes>
+          </SuggestionContent>
+        </SuggestionCard>
       </TouchableOpacity>
     );
   };
@@ -256,31 +263,7 @@ export default class PokemonDetail extends Component {
   render() {
     const { pokemon, evolutionChain, loading, moves, typeEffectiveness } = this.state;
 
-    const getTypeColor = (type) => {
-      const colors = {
-        normal: "#A8A878",
-        fighting: "#C03028",
-        flying: "#A890F0",
-        poison: "#A040A0",
-        ground: "#E0C068",
-        rock: "#B8A038",
-        bug: "#A8B820",
-        ghost: "#705898",
-        steel: "#B8B8D0",
-        fire: "#F08030",
-        water: "#6890F0",
-        grass: "#78C850",
-        electric: "#F8D030",
-        psychic: "#F85888",
-        ice: "#98D8D8",
-        dragon: "#7038F8",
-        dark: "#705848",
-        fairy: "#EE99AC",
-      };
-      return colors[type] || "#999";
-    };
-
-    // Calcular tipos forte contra e fraco contra
+    // Combina efetividades de todos os tipos em listas únicas
     let strongAgainstTypes = [];
     let weakAgainstTypes = [];
 
@@ -294,10 +277,8 @@ export default class PokemonDetail extends Component {
     });
 
     return (
-      <View style={styles.container}>
+      <Container>
         <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollViewContent}
           showsVerticalScrollIndicator={true}
         >
           <HeroImage
@@ -308,39 +289,36 @@ export default class PokemonDetail extends Component {
 
           <HeroName>#{pokemon.id} {pokemon.name}</HeroName>
 
-          <View style={styles.typesContainer}>
-            {pokemon.types?.slice(0, 3).map((type) => (
-              <Text
+          <TypesContainer>
+            {pokemon.types?.slice(0, FILTER_LIMITS.MAX_TYPES_DISPLAY).map((type) => (
+              <TypeTag
                 key={type}
-                style={[
-                  styles.typeTag,
-                  { backgroundColor: getTypeColor(type) },
-                ]}
+                style={{ backgroundColor: getTypeColor(type) }}
               >
                 {type}
-              </Text>
+              </TypeTag>
             ))}
-          </View>
+          </TypesContainer>
 
           <SectionTitle>Informações Básicas</SectionTitle>
-          <View style={styles.infoContainer}>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Altura</Text>
-              <Text style={styles.infoValue}>
+          <InfoContainer>
+            <InfoItem>
+              <InfoLabel>Altura</InfoLabel>
+              <InfoValue>
                 {(pokemon.height / 10).toFixed(1)}m
-              </Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Peso</Text>
-              <Text style={styles.infoValue}>
+              </InfoValue>
+            </InfoItem>
+            <InfoItem>
+              <InfoLabel>Peso</InfoLabel>
+              <InfoValue>
                 {(pokemon.weight / 10).toFixed(1)}kg
-              </Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>XP Base</Text>
-              <Text style={styles.infoValue}>{pokemon.baseExperience}</Text>
-            </View>
-          </View>
+              </InfoValue>
+            </InfoItem>
+            <InfoItem>
+              <InfoLabel>XP Base</InfoLabel>
+              <InfoValue>{pokemon.baseExperience}</InfoValue>
+            </InfoItem>
+          </InfoContainer>
 
           <SectionTitle>Habilidades</SectionTitle>
           <HeroDescription>
@@ -351,59 +329,53 @@ export default class PokemonDetail extends Component {
           {pokemon.stats && pokemon.stats.length > 0 && (
             <>
               <SectionTitle>Stats</SectionTitle>
-              <View style={styles.statsContainer}>
+              <StatsContainer>
                 {pokemon.stats.slice(0, 6).map((stat) => (
-                  <View key={stat.stat.name} style={styles.statRow}>
-                    <Text style={styles.statName}>{stat.stat.name}</Text>
-                    <View style={styles.statBar}>
-                      <View
-                        style={[
-                          styles.statFill,
-                          { width: `${Math.min(stat.base_stat, 150)}%` },
-                        ]}
+                  <StatRow key={stat.stat.name}>
+                    <StatName>{stat.stat.name}</StatName>
+                    <StatBar>
+                      <StatFill
+                        style={{ width: `${Math.min(stat.base_stat, 150)}%` }}
                       />
-                    </View>
-                    <Text style={styles.statValue}>{stat.base_stat}</Text>
-                  </View>
+                    </StatBar>
+                    <StatValue>{stat.base_stat}</StatValue>
+                  </StatRow>
                 ))}
-              </View>
+              </StatsContainer>
             </>
           )}
 
           {moves && (
             <>
               <SectionTitle>Golpes 💥</SectionTitle>
-              <HeroDescription style={styles.movesText}>
+              <MovesText>
                 {moves}
-              </HeroDescription>
+              </MovesText>
             </>
           )}
 
           {strongAgainstTypes.length > 0 && (
             <>
               <SectionTitle>Forte Contra ✅</SectionTitle>
-              <View style={styles.typeEffectivenessContainer}>
+              <TypeEffectivenessContainer>
                 {strongAgainstTypes.slice(0, 8).map((type) => (
-                  <View
+                  <TypeEffectivenessBadge
                     key={type}
-                    style={[
-                      styles.typeEffectivenessBadge,
-                      { backgroundColor: getTypeColor(type) },
-                    ]}
+                    badgeColor={getTypeColor(type)}
                   >
-                    <Text style={styles.typeEffectivenessText}>
+                    <TypeEffectivenessText>
                       {type}
-                    </Text>
-                  </View>
+                    </TypeEffectivenessText>
+                  </TypeEffectivenessBadge>
                 ))}
-              </View>
+              </TypeEffectivenessContainer>
             </>
           )}
 
           {weakAgainstTypes.length > 0 && (
             <>
               <SectionTitle>Fraco Contra ❌</SectionTitle>
-              <View style={styles.typeEffectivenessContainer}>
+              <TypeEffectivenessContainer>
                 {weakAgainstTypes.slice(0, 8).map((type) => (
                   <View
                     key={type}
@@ -417,12 +389,12 @@ export default class PokemonDetail extends Component {
                       },
                     ]}
                   >
-                    <Text style={styles.typeEffectivenessText}>
+                    <TypeEffectivenessText>
                       {type}
-                    </Text>
+                    </TypeEffectivenessText>
                   </View>
                 ))}
-              </View>
+              </TypeEffectivenessContainer>
             </>
           )}
 
@@ -430,182 +402,54 @@ export default class PokemonDetail extends Component {
             <ActivityIndicator
               size="large"
               color="#ff0000"
-              style={styles.loadingIndicator}
+              style={{ marginVertical: 20 }}
             />
           ) : evolutionChain.length > 1 ? (
             <>
-              <SectionTitle style={styles.relatedTitle}>
+              <SectionTitle>
                 Cadeia Evolutiva
               </SectionTitle>
-              <ScrollView
-                horizontal={true}
-                showsHorizontalScrollIndicator={true}
-                style={styles.evolutionScroll}
-              >
+              <EvolutionContainer>
                 {evolutionChain.map((evolution) => (
                   <View key={evolution.name}>
                     {this.renderEvolution({ item: evolution })}
                   </View>
                 ))}
-              </ScrollView>
+              </EvolutionContainer>
             </>
           ) : (
-            <Text style={styles.noRelatedText}>
+            <NoEvolutionText>
               Sem evolução disponível
-            </Text>
+            </NoEvolutionText>
           )}
 
           {this.state.suggestions.length > 0 && (
             <>
-              <SectionTitle style={styles.suggestionsTitle}>
+              <SectionTitle>
                 Sugestões 🎲
               </SectionTitle>
-              <View style={styles.suggestionsContainer}>
+              <SuggestionsContainer>
                 {this.state.suggestions.map((suggestion) => (
                   <View key={String(suggestion.id)}>
                     {this.renderSuggestion({ item: suggestion })}
                   </View>
                 ))}
-              </View>
+              </SuggestionsContainer>
             </>
           )}
         </ScrollView>
-      </View>
+      </Container>
     );
   }
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    paddingBottom: 100,
-    flexGrow: 1,
-  },
-  typesContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginVertical: 15,
-  },
-  typeTag: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  infoContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingHorizontal: 15,
-    paddingVertical: 15,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    marginVertical: 10,
-  },
-  infoItem: {
-    alignItems: "center",
-  },
-  infoLabel: {
-    fontSize: 12,
-    color: "#666",
-    marginBottom: 5,
-  },
-  infoValue: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#ff0000",
-  },
-  statsContainer: {
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    padding: 15,
-    marginVertical: 10,
-  },
-  statRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-    justifyContent: "space-between",
-  },
-  statName: {
-    width: 70,
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#666",
-    textTransform: "capitalize",
-  },
-  statBar: {
-    flex: 1,
-    height: 8,
-    backgroundColor: "#ddd",
-    borderRadius: 4,
-    marginHorizontal: 10,
-    overflow: "hidden",
-  },
-  statFill: {
-    height: "100%",
-    backgroundColor: "#ff0000",
-  },
-  statValue: {
-    width: 35,
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "#333",
-    textAlign: "right",
-  },
-  loadingIndicator: {
-    marginVertical: 20,
-  },
-  relatedTitle: {
-    marginTop: 30,
-  },
-  evolutionScroll: {
-    marginVertical: 12,
-  },
-  noRelatedText: {
-    textAlign: "center",
-    color: "#999",
-    marginVertical: 20,
-    fontSize: 14,
-  },
-  movesText: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: "#555",
-  },
-  typeEffectivenessContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginVertical: 10,
-  },
+// Estilos para fraco contra (usa View diretamente, não styled-component)
+const styles = {
   typeEffectivenessBadge: {
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
     backgroundColor: "#999",
-  },
-  typeEffectivenessText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-    textTransform: "capitalize",
-  },
-  suggestionsTitle: {
-    marginTop: 30,
-  },
-  suggestionsContainer: {
-    gap: 12,
   },
   suggestionCard: {
     flexDirection: "row",
@@ -617,30 +461,4 @@ const styles = StyleSheet.create({
     borderColor: "#eee",
     marginBottom: 10,
   },
-  suggestionImageContainer: {
-    width: 80,
-    height: 80,
-    marginRight: 12,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  suggestionContent: {
-    flex: 1,
-  },
-  suggestionTypes: {
-    flexDirection: "row",
-    gap: 6,
-    marginTop: 6,
-  },
-  suggestionTypeTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: "600",
-    overflow: "hidden",
-  },
-});
+};

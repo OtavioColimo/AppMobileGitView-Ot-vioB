@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   View,
   Text,
-  StyleSheet,
   TextInput,
   ScrollView,
 } from "react-native";
@@ -20,48 +19,42 @@ import {
   LoadingContainer,
 } from "../styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const POKEMON_TYPES = [
-  "normal",
-  "fighting",
-  "flying",
-  "poison",
-  "ground",
-  "rock",
-  "bug",
-  "ghost",
-  "steel",
-  "fire",
-  "water",
-  "grass",
-  "electric",
-  "psychic",
-  "ice",
-  "dragon",
-  "dark",
-  "fairy",
-];
-
-const TYPE_COLORS = {
-  normal: "#A8A878",
-  fighting: "#C03028",
-  flying: "#A890F0",
-  poison: "#A040A0",
-  ground: "#E0C068",
-  rock: "#B8A038",
-  bug: "#A8B820",
-  ghost: "#705898",
-  steel: "#B8B8D0",
-  fire: "#F08030",
-  water: "#6890F0",
-  grass: "#78C850",
-  electric: "#F8D030",
-  psychic: "#F85888",
-  ice: "#98D8D8",
-  dragon: "#7038F8",
-  dark: "#705848",
-  fairy: "#EE99AC",
-};
+import { TYPE_COLORS, getTypeColor, POKEMON_TYPES, FILTER_LIMITS } from "../constants/pokemon";
+import {
+  HeaderContainer,
+  Title,
+  LogoutBtn,
+  LogoutBtnText,
+  SearchContainer,
+  SearchInput,
+  FilterToggleBtn,
+  FilterToggleBtnText,
+  ResultCount,
+  FilterPanel,
+  FilterTabs,
+  FilterTab,
+  FilterTabText,
+  FilterContent,
+  FilterOptionsContainer,
+  TypeFilterBtn,
+  TypeFilterBtnText,
+  StatFilterContainer,
+  StatFilterLabel,
+  SliderContainer,
+  SliderBtn,
+  SliderValue,
+  ResetBtn,
+  ResetBtnText,
+  CardContent,
+  TypesContainer,
+  TypeTag,
+  CardStats,
+  Stat,
+  EmptyContainer,
+  EmptyText,
+  RetryBtn,
+  RetryBtnText,
+} from "../styles/MainStyles";
 
 export default class Main extends Component {
   state = {
@@ -151,8 +144,10 @@ export default class Main extends Component {
     this.setState({ selectedType: newType }, this.applyFilters);
   };
 
-
-
+  /**
+   * Aplica múltiplos filtros combinados: tipo, busca por nome/ID, altura e peso.
+   * Os filtros funcionam de forma acumulativa (AND lógico).
+   */
   applyFilters = () => {
     const {
       allPokemon,
@@ -200,8 +195,6 @@ export default class Main extends Component {
     this.props.navigation.navigate("Login");
   };
 
-  getTypeColor = (type) => TYPE_COLORS[type] || "#999";
-
   renderPokemonCard = ({ item: pokemon }) => (
     <TouchableOpacity onPress={() => this.handlePokemonPress(pokemon)}>
       <CardContainer>
@@ -210,35 +203,34 @@ export default class Main extends Component {
             uri: pokemon.image || "https://via.placeholder.com/150",
           }}
         />
-        <View style={styles.cardContent}>
+        <CardContent>
           <CardTitle numberOfLines={1}>
             #{pokemon.id} {pokemon.name}
           </CardTitle>
-          <View style={styles.typesContainer}>
+          <TypesContainer>
             {pokemon.types.slice(0, 2).map((type) => (
-              <Text
+              <TypeTag
                 key={type}
-                style={[
-                  styles.typeTag,
-                  { backgroundColor: this.getTypeColor(type) },
-                ]}
+                style={{
+                  backgroundColor: getTypeColor(type),
+                }}
               >
                 {type}
-              </Text>
+              </TypeTag>
             ))}
-          </View>
+          </TypesContainer>
           <CardSubtitle numberOfLines={2}>
             {pokemon.abilities.join(", ") || "Sem habilidades"}
           </CardSubtitle>
-          <View style={styles.cardStats}>
-            <Text style={styles.stat}>
+          <CardStats>
+            <Stat>
               ⚖️ {(pokemon.weight / 10).toFixed(1)}kg
-            </Text>
-            <Text style={styles.stat}>
+            </Stat>
+            <Stat>
               📏 {(pokemon.height / 10).toFixed(1)}m
-            </Text>
-          </View>
-        </View>
+            </Stat>
+          </CardStats>
+        </CardContent>
       </CardContainer>
     </TouchableOpacity>
   );
@@ -534,226 +526,3 @@ export default class Main extends Component {
     );
   }
 }
-
-const styles = StyleSheet.create({
-  headerContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-    paddingHorizontal: 0,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#ff0000",
-  },
-  logoutBtn: {
-    backgroundColor: "#ff0000",
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 5,
-  },
-  logoutBtnText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 12,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 12,
-    alignItems: "center",
-  },
-  searchInput: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    fontSize: 14,
-    color: "#333",
-  },
-  filterToggleBtn: {
-    backgroundColor: "#ff0000",
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  filterToggleBtnText: {
-    fontSize: 20,
-    color: "#fff",
-  },
-  resultCount: {
-    fontSize: 12,
-    color: "#999",
-    marginBottom: 10,
-    marginLeft: 2,
-  },
-  filterPanel: {
-    backgroundColor: "#f9f9f9",
-    borderRadius: 8,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    maxHeight: 280,
-  },
-  filterTabs: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-  filterTab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: "center",
-    borderBottomWidth: 2,
-    borderBottomColor: "transparent",
-  },
-  filterTabActive: {
-    borderBottomColor: "#ff0000",
-  },
-  filterTabText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#999",
-  },
-  filterTabTextActive: {
-    color: "#ff0000",
-  },
-  filterContent: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    maxHeight: 220,
-  },
-  filterOptionsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  typeFilterBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#f0f0f0",
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-  typeFilterBtnActive: {
-    borderColor: "#ff0000",
-    borderWidth: 2,
-  },
-  typeFilterBtnText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#666",
-    textTransform: "capitalize",
-  },
-  typeFilterBtnTextActive: {
-    color: "#fff",
-  },
-
-  statFilterContainer: {
-    width: "100%",
-  },
-  statFilterLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 10,
-  },
-  sliderContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 15,
-    gap: 15,
-  },
-  sliderBtn: {
-    width: 40,
-    height: 40,
-    backgroundColor: "#ff0000",
-    color: "#fff",
-    textAlign: "center",
-    textAlignVertical: "center",
-    borderRadius: 8,
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  sliderValue: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#333",
-    minWidth: 50,
-    textAlign: "center",
-  },
-  resetBtn: {
-    backgroundColor: "#f0f0f0",
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-  resetBtnText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#ff0000",
-  },
-  cardContent: {
-    flex: 1,
-    marginLeft: 15,
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    paddingRight: 10,
-  },
-  typesContainer: {
-    flexDirection: "row",
-    gap: 8,
-    marginVertical: 5,
-  },
-  typeTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: "600",
-    overflow: "hidden",
-  },
-  cardStats: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
-  },
-  stat: {
-    fontSize: 12,
-    color: "#666",
-    fontWeight: "600",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyText: {
-    fontSize: 16,
-    color: "#999",
-    marginBottom: 20,
-  },
-  retryBtn: {
-    backgroundColor: "#ff0000",
-    paddingHorizontal: 25,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryBtnText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-});

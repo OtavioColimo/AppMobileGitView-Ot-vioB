@@ -1,12 +1,12 @@
 import React, { Component } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Text } from "react-native";
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+  AuthContainer,
+  AuthInput,
+  AuthButton,
+  AuthButtonText,
+} from "../styles/AuthStyles";
 
 export default class Cadastro extends Component {
   state = {
@@ -31,54 +31,22 @@ export default class Cadastro extends Component {
 
   render() {
     return (
-      <View style={styles.container}>
-        <TextInput
-          style={styles.input}
+      <AuthContainer>
+        <AuthInput
           placeholder="E-mail"
           value={this.state.email}
           onChangeText={(email) => this.setState({ email })}
         />
-        <TextInput
-        style={styles.input}
+        <AuthInput
           placeholder="Senha"
           secureTextEntry={true}
           value={this.state.password}
           onChangeText={(password) => this.setState({ password })}
         />
-        <TouchableOpacity style={styles.button} onPress={this.handleCadastro}>
-          <Text style={styles.buttonText}>Cadastrar</Text>
-        </TouchableOpacity>
-      </View>
+        <AuthButton onPress={this.handleCadastro}>
+          <AuthButtonText>Cadastrar</AuthButtonText>
+        </AuthButton>
+      </AuthContainer>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#fff",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    padding: 10,
-    marginVertical: 10,
-    width: "80%",
-  },
-  button: {
-    backgroundColor: "#ff0000",
-    borderRadius: 5,
-    padding: 10,
-    width: "80%",
-    alignItems: "center",
-    marginTop: 8,
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    textTransform: "uppercase",
-  },
-});

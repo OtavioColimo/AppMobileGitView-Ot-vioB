@@ -192,11 +192,12 @@ export const DetailContainer = styled.View`
 `;
 
 export const HeroImage = styled.Image`
-  width: 100%;
-  height: 300px;
+  width: 200px;
+  height: 200px;
   border-radius: 12px;
   margin-bottom: 20px;
   background: #eee;
+  align-self: center;
 `;
 
 export const HeroName = styled.Text`
